@@ -4,7 +4,8 @@ Module.register("MMM-SmokedMirror",{
 		showLocation: true,
 		showValues: true,
 		updateInterval: 30,
-		animationSpeed: 1000
+		animationSpeed: 1000,
+      nowCast: false,
     },
 	start: function(){
 		Log.info('Starting module: ' + this.name);
@@ -55,8 +56,8 @@ Module.register("MMM-SmokedMirror",{
 		}
     
 		// uri to gather data
-		this.config.url = 'http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + this.config.stationID + '/1/0'
-		this.config.yql = 'SELECT * FROM html WHERE url="' + this.config.url + '" AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//tbody//tr//td[' + (1 + this.config.pollutionColumn) + ']\'|truncate(count=24)'
+		this.config.url = 'http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + this.config.stationID + '/' + (this.config.nowCast ? 2 : 1) + '/0'
+		this.config.yql = 'SELECT * FROM html WHERE url="' + this.config.url + '" AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//tbody//tr' + (this.config.nowCast ? '\'|sort(field="th", descending="true")' : '//td[' + (1 + this.config.pollutionColumn) + ']\'|truncate(count=24)')
 		
     // load data
 		this.load();
@@ -81,12 +82,40 @@ Module.register("MMM-SmokedMirror",{
         }
         else {
           var pollution
-          response.query.results.td.forEach(function(item){
-            pollution = parseFloat(item.replace(',', '.'))
-            if(pollution) {
-              self.data.pollution = pollution
+          
+          if(self.config.nowCast) {
+            var i=1
+            for (let item of response.query.results.tr) {
+              if((pollution = parseFloat(item.td[self.config.pollutionColumn].replace(',', '.')))) {
+                self.data.pollutions[i++] = pollution
+                if(i > 12){
+                  break
+                }
+              }
             }
-          })
+            // math from: https://en.wikipedia.org/wiki/NowCast_(air_quality_index)
+            var w = Math.min(self.data.pollutions) / Math.max(self.data.pollutions)
+            if(this.config.pollutionType != 'O3') {
+              w = w > .5 ? w : .5
+            }
+            var ncl = 0, ncm = 0
+            for (i = 1; i <= 12; i++) {
+              ncl += Math.pow(w, i - 1) * self.data.pollutions[i];
+              ncm += Math.pow(w, i - 1)
+            }
+            self.data.pollution = ncl/ncm
+          }
+          else {
+            for (let item of response.query.results.td) {
+              if((pollution = parseFloat(item.replace(',', '.')))) {
+                self.data.pollution = pollution
+              }
+              else {
+                break
+              }
+            }
+          }
+          
           self.loaded = true;
           self.updateDom(self.animationSpeed);
         }
@@ -115,6 +144,10 @@ Module.register("MMM-SmokedMirror",{
 			wrapper.innerHTML = "Please set the <i>stationID</i> in the config for module: " + this.name + ".";
 			wrapper.className = "dimmed light small";
 		}
+    else if(this.config.nowCast && this.config.pollutionType != 'PM10' && this.config.pollutionType != 'PM2,5' && this.config.pollutionType != 'O3') {
+			wrapper.innerHTML = 'NowCast works only with one of: ' + 'PM10; PM2,5; O3';
+			wrapper.className = "dimmed light small";
+    }
 		else if (!this.loaded) {
 			wrapper.innerHTML = "Loading air quality ...";
 			wrapper.className = "dimmed light small";

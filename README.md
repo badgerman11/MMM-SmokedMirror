@@ -35,6 +35,7 @@ You may want to set the following options in the config section as well:
 | Option |  Description | 
 |---|---|
 | `lang` | change the language<br><br>This is **OPTIONAL**.<br>**Default (and only one for now) value:** `pl` | 
+| `nowCast` | Show [NowCast](https://en.wikipedia.org/wiki/NowCast_(air_quality_index)) instead of hourly data<br><br>* works only with polutionType: `PM10` or `PM2,5` or `O3`<br>**Possible values:** `true` or `false`.<br>**Default value:** `false` | 
 | `showLocation` | toggle location printing<br><br>This is **OPTIONAL**.<br>**Default value:**`true` |
 | `showValues` | toggle values printing<br><br>This is **OPTIONAL**.<br>**Default value:**`true` | 
 | `stationID` | The ID for station you want to show the air quality.<br><br>This is **REQUIRED**.| 
