@@ -11,7 +11,19 @@ Module.register("MMM-SmokedMirror",{
 		
 		// uri to gather data
 		this.config.url = 'http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + this.config.stationID + '/1/0'
-		this.config.ygl = 'http://query.yahooapis.com/v1/public/yql?q=SELECT * FROM html WHERE url=\'' + this.config.url + '\' AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table\'&format=json&callback=?'
+    
+		this.config.yql = 'SELECT * FROM html WHERE url=\'' + this.config.url + '\' AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//caption\''
+    var self = this;
+    YUI().use('node', 'event', 'yql', function(Y) {
+      Y.YQL(self.config.yql, function(response) {
+        if(response.error) {
+          Log.error(response.error.description)
+        }
+        else {
+          self.data.city = response.query.results.caption.replace(/Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
+        }
+      });
+    });
 		
 		//type of pollution
 		switch(this.config.pollutionType) {
@@ -57,29 +69,39 @@ Module.register("MMM-SmokedMirror",{
 				this.config.units = 'mg/m³'
 				break;
 		}
-		// load data
+    
+		this.config.yql = 'SELECT * FROM html WHERE url="' + this.config.url + '" AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//tbody//tr//td[' + (1 + this.config.pollutionColumn) + ']\'|truncate(count=24)'
+		
+    // load data
 		this.load();
+    
 		// schedule refresh
 		setInterval(
 			this.load.bind(this),
 			this.config.updateInterval * 60 * 1000);
 	},
 	load: function(){
+
 		var self = this;
-		$.getJSON( this.config.ygl, function(data){
-			self.data.city = data.query.results.table.caption.replace(/Dane pomiarowe tabele |\t+|\(.+/gmi, '')
-			var pollution
-			data.query.results.table.tbody.tr.forEach(function(item, index){
-				if(index < data.query.results.table.tbody.tr.length - 3) {
-					pollution = parseFloat(item.td[self.config.pollutionColumn].replace(',', '.'))
-					if(pollution) {
-						self.data.pollution = pollution
-					}
-				}
-			})
-			self.loaded = true;
-			self.updateDom(self.animationSpeed);
-		})
+    
+    YUI().use('node', 'event', 'yql', function(Y) {
+      Y.YQL(self.config.yql, function(response) {
+        if(response.error) {
+          Log.error(response.error.description)
+        }
+        else {
+          var pollution
+          response.query.results.td.forEach(function(item){
+            pollution = parseFloat(item.replace(',', '.'))
+            if(pollution) {
+              self.data.pollution = pollution
+            }
+          })
+          self.loaded = true;
+          self.updateDom(self.animationSpeed);
+        }
+      });
+    });
 	},
 	html: {
 		icon: '<i class="fa fa-leaf"></i>',
@@ -89,7 +111,7 @@ Module.register("MMM-SmokedMirror",{
 	},
 	getScripts: function() {
 		return [
-			'//code.jquery.com/jquery-3.2.0.min.js',
+      '//yui-s.yahooapis.com/3.8.0/build/yui/yui-min.js',
 			'String.format.js'
 		];
 	},
