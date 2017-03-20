@@ -2,6 +2,8 @@
 
 [MagicMirror Project on Github](https://github.com/MichMich/MagicMirror) | [MAIN INSPECTORATE FOR ENVIRONMENTAL PROTECTION](http://powietrze.gios.gov.pl)
 
+<img src="https://raw.githubusercontent.com/Santanachia/MMM-SmokedMirror/master/screen.png" />
+
 ## Usage 
 
 To use this module, go to the *modules* subfolder of your mirror and clone this repository. 
@@ -22,10 +24,10 @@ To run the module, you need to add the following data to your config.js file.
 ```
 ### StationID
 Go to your station at [GIOŚ](http://powietrze.gios.gov.pl/pjp/station/search)
-Use the part behind current/station_details/info/ for your station.
+Use the part behind /station_details/info/ for your station.
 For example http://powietrze.gios.gov.pl/pjp/current/station_details/info/544 would be:
 ```
-	location: 544
+	stationID: 544
 ```
 
 You may want to set the following options in the config section as well:
@@ -40,4 +42,4 @@ You may want to set the following options in the config section as well:
 
 ### Known Issues
 
-Due to the [YQL](https://developer.yahoo.com/yql/) restrictions it is not possible to have fresh data aech time.
+Due to the [YQL](https://developer.yahoo.com/yql/) restrictions it is not possible to have fresh data each time.
