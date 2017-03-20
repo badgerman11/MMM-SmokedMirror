@@ -9,22 +9,6 @@ Module.register("MMM-SmokedMirror",{
 	start: function(){
 		Log.info('Starting module: ' + this.name);
 		
-		// uri to gather data
-		this.config.url = 'http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + this.config.stationID + '/1/0'
-    
-		this.config.yql = 'SELECT * FROM html WHERE url=\'' + this.config.url + '\' AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//caption\''
-    var self = this;
-    YUI().use('node', 'event', 'yql', function(Y) {
-      Y.YQL(self.config.yql, function(response) {
-        if(response.error) {
-          Log.error(response.error.description)
-        }
-        else {
-          self.data.city = response.query.results.caption.replace(/Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
-        }
-      });
-    });
-		
 		//type of pollution
 		switch(this.config.pollutionType) {
 			case 'PM10':
@@ -70,6 +54,8 @@ Module.register("MMM-SmokedMirror",{
 				break;
 		}
     
+		// uri to gather data
+		this.config.url = 'http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + this.config.stationID + '/1/0'
 		this.config.yql = 'SELECT * FROM html WHERE url="' + this.config.url + '" AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//tbody//tr//td[' + (1 + this.config.pollutionColumn) + ']\'|truncate(count=24)'
 		
     // load data
@@ -81,6 +67,10 @@ Module.register("MMM-SmokedMirror",{
 			this.config.updateInterval * 60 * 1000);
 	},
 	load: function(){
+    
+    if(!this.data.city) {
+      this.data.city = this.loadCity();
+    }
 
 		var self = this;
     
@@ -126,7 +116,7 @@ Module.register("MMM-SmokedMirror",{
 			wrapper.className = "dimmed light small";
 		}
 		else if (!this.loaded) {
-			wrapper.innerHTML = "Loading air quality index ...";
+			wrapper.innerHTML = "Loading air quality ...";
 			wrapper.className = "dimmed light small";
 		}
 		else if (!this.data.pollution) {
@@ -150,5 +140,18 @@ Module.register("MMM-SmokedMirror",{
 		else if(pollution < this.config.pollutionNorm * 4) return 'Zła';
 		else if(pollution < this.config.pollutionNorm * 6) return 'Bardzo zła';
 		else return 'Toksyczna';
-	}
+	},
+  loadCity: function() {
+    var yql = 'SELECT * FROM html WHERE url=\'' + this.config.url + '\' AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//caption\''
+    YUI().use('node', 'event', 'yql', function(Y) {
+      Y.YQL(yql, function(response) {
+        if(response.error) {
+          Log.error(response.error.description)
+        }
+        else {
+          return response.query.results.caption.replace(/Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
+        }
+      });
+    });
+  },
 });
