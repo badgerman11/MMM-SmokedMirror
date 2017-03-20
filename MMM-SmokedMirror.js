@@ -1,6 +1,5 @@
-Module.register("MMM-SmokedMirror",{
+Module.register('MMM-SmokedMirror', {
     defaults: {
-		lang: 'pl',
 		showLocation: true,
 		showValues: true,
 		updateInterval: 30,
@@ -58,7 +57,7 @@ Module.register("MMM-SmokedMirror",{
 		this.config.url = 'http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + this.config.stationID + '/1/0'
 		this.config.yql = 'SELECT * FROM html WHERE url="' + this.config.url + '" AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//tbody//tr//td[' + (1 + this.config.pollutionColumn) + ']\'|truncate(count=24)'
 		
-    // load data
+		// load data
 		this.load();
     
 		// schedule refresh
@@ -67,37 +66,37 @@ Module.register("MMM-SmokedMirror",{
 			this.config.updateInterval * 60 * 1000);
 	},
 	load: function(){
-    
-    if(!this.data.city) {
-      this.data.city = this.loadCity();
-    }
+
+		if(!this.data.location) {
+			this.loadLocation();
+		}
 
 		var self = this;
-    
-    YUI().use('node', 'event', 'yql', function(Y) {
-      Y.YQL(self.config.yql, function(response) {
-        if(response.error) {
-          Log.error(response.error.description)
-        }
-        else {
-          var pollution
-          response.query.results.td.forEach(function(item){
-            pollution = parseFloat(item.replace(',', '.'))
-            if(pollution) {
-              self.data.pollution = pollution
-            }
-          })
-          self.loaded = true;
-          self.updateDom(self.animationSpeed);
-        }
-      });
-    });
+
+		YUI().use('node', 'event', 'yql', function(Y) {
+			Y.YQL(self.config.yql, function(response) {
+				if(response.error) {
+					Log.error(response.error.description)
+				}
+				else {
+					var pollution
+					response.query.results.td.forEach(function(item){
+						pollution = parseFloat(item.replace(',', '.'))
+						if(pollution) {
+							self.data.pollution = pollution
+						}
+					})
+					self.loaded = true;
+					self.updateDom(self.animationSpeed);
+				}
+			});
+		});
 	},
 	html: {
 		icon: '<i class="fa fa-leaf"></i>',
 		city: '<div class="xsmall">{0}</div>',
 		values: '<span class="small light">{0}</span>',
-		quality: '<div>{0} {1}{2}{3}</div>'
+		quality: '<div>{0} {1}{2}{3}{4}</div>'
 	},
 	getScripts: function() {
 		return [
@@ -110,18 +109,18 @@ Module.register("MMM-SmokedMirror",{
 	},
 	// Override dom generator.
 	getDom: function() {
-		var wrapper = document.createElement("div");
+		var wrapper = document.createElement('div');
 		if (!this.config.stationID) {
-			wrapper.innerHTML = "Please set the <i>stationID</i> in the config for module: " + this.name + ".";
-			wrapper.className = "dimmed light small";
+			wrapper.innerHTML = 'Please set the <i>stationID</i> in the config for module: ' + this.name + '.';
+			wrapper.className = 'dimmed light small';
 		}
-		else if (!this.loaded) {
-			wrapper.innerHTML = "Loading air quality ...";
-			wrapper.className = "dimmed light small";
+		else if (!this.loaded || !this.data.location) {
+			wrapper.innerHTML = 'Loading air quality ...';
+			wrapper.className = 'dimmed light small';
 		}
 		else if (!this.data.pollution) {
-			wrapper.innerHTML = "No data for " + this.config.pollutionType;
-			wrapper.className = "dimmed light small";
+			wrapper.innerHTML = 'No data for ' + this.config.pollutionType;
+			wrapper.className = 'dimmed light small';
 		}
 		else {
 			wrapper.innerHTML = 
@@ -129,7 +128,9 @@ Module.register("MMM-SmokedMirror",{
 					this.html.icon,
 					this.config.showValues ? this.config.pollutionType + ' ' : '',
 					this.impact(this.data.pollution),
-					(this.config.showValues ? this.html.values.format(' (' + this.data.pollution.toString().replace('.', ',') + ' z ' + this.config.pollutionNorm + this.config.units + ')') : '')) + (this.config.showLocation ? this.html.city.format(this.data.city) : '');
+					(this.config.showValues ? this.html.values.format(' (' + this.data.pollution.toString().replace('.', ',') + ' z ' + this.config.pollutionNorm + this.config.units + ')') : ''),
+					(this.config.showLocation ? this.html.city.format(this.data.location) : '')
+				)
 		}
 		return wrapper;
 	},
@@ -141,17 +142,19 @@ Module.register("MMM-SmokedMirror",{
 		else if(pollution < this.config.pollutionNorm * 6) return 'Bardzo zła';
 		else return 'Toksyczna';
 	},
-  loadCity: function() {
-    var yql = 'SELECT * FROM html WHERE url=\'' + this.config.url + '\' AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//caption\''
-    YUI().use('node', 'event', 'yql', function(Y) {
-      Y.YQL(yql, function(response) {
-        if(response.error) {
-          Log.error(response.error.description)
-        }
-        else {
-          return response.query.results.caption.replace(/Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
-        }
-      });
-    });
-  },
+	loadLocation: function() {
+		var yql = 'SELECT * FROM html WHERE url=\'' + this.config.url + '\' AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//caption\''
+		var self = this
+		YUI().use('node', 'event', 'yql', function(Y) {
+			Y.YQL(yql, function(response) {
+				if(response.error) {
+					Log.error(response.error.description)
+				}
+				else {
+					self.data.location = response.query.results.caption.replace(/Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
+					self.updateDom(self.animationSpeed);
+				}
+			});
+		});
+	},
 });
