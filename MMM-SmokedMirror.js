@@ -1,3 +1,5 @@
+"use strict"
+
 Module.register('MMM-SmokedMirror', {
     defaults: {
     showLocation: true,
@@ -9,7 +11,7 @@ Module.register('MMM-SmokedMirror', {
   },
   start: function(){
     Log.info('Starting module: ' + this.name);
-    
+
     //type of pollution
     switch(this.config.pollutionType) {
       case 'PM10':
@@ -54,14 +56,14 @@ Module.register('MMM-SmokedMirror', {
         this.config.units = 'mg/m³'
         break;
     }
-    
+
     // uri to gather data
     this.config.url = 'http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + this.config.stationID + '/' + (this.config.nowCast ? 2 : 1) + '/0'
     this.config.yql = 'SELECT * FROM html WHERE url="' + this.config.url + '" AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//tbody//tr' + (this.config.nowCast ? '\'|sort(field="th", descending="true")' : '//td[' + (1 + this.config.pollutionColumn) + ']\'|truncate(count=24)')
-    
+
     // load data
     this.load();
-    
+
     // schedule refresh
     setInterval(
       this.load.bind(this),
@@ -138,15 +140,14 @@ Module.register('MMM-SmokedMirror', {
   getStyles: function() {
     return ['https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css'];
   },
-  // Override dom generator.
   getDom: function() {
     var wrapper = document.createElement('div');
     if (!this.config.stationID) {
       wrapper.innerHTML = this.translate('NoStationID') + this.name + '.';
       wrapper.className = 'dimmed light small';
     }
-(??)		else if (!this.loaded) {
-(??)			wrapper.innerHTML = this.translate('Loading');
+    else if (!this.loaded) {
+      wrapper.innerHTML = this.translate('Loading');
       wrapper.className = 'dimmed light small';
     }
     else if(this.config.nowCast && this.config.pollutionType != 'PM10' && this.config.pollutionType != 'PM2,5' && this.config.pollutionType != 'O3') {
@@ -171,8 +172,8 @@ Module.register('MMM-SmokedMirror', {
   },
   getTranslations: function() {
     return {
-        en: 'translations/en.json',
-        pl: 'translations/pl.json'
+      en: 'translations/en.json',
+      pl: 'translations/pl.json'
     }
   },
   impact: function(pollution) {
