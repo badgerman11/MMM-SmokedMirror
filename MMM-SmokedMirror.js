@@ -128,7 +128,7 @@ Module.register('MMM-SmokedMirror', {
   html: {
     icon: '<i class="fa fa-leaf"></i>',
     city: '<div class="xsmall">{0}</div>',
-    values: '<span class="small light"> ({0} ' + this.translate('Of') + ' {1}{2})</span>',
+    values: '<span class="small light"> ({0} {1} {2}{3})</span>',
     quality: '<div>{0} {1}{2}{3}{4}</div>'
   },
   getScripts: function() {
@@ -164,7 +164,7 @@ Module.register('MMM-SmokedMirror', {
           this.html.icon,
           this.config.showValues ? this.config.pollutionType + ' ' : '',
           this.impact(this.data.pollution),
-          (this.config.showValues ? this.html.values.format(this.data.pollution.toString().replace('.', ','), this.config.pollutionNorm, this.config.nowCast ? '' : this.config.units) : ''),
+          (this.config.showValues ? this.html.values.format(this.data.pollution.toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm, this.config.nowCast ? '' : this.config.units) : ''),
           (this.config.showLocation && this.data.location ? this.html.city.format(this.data.location) : '')
         )
     }
