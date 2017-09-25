@@ -59,7 +59,7 @@ Module.register('MMM-SmokedMirror', {
 
     // uri to gather data
     this.config.url = 'http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + this.config.stationID + '/' + (this.config.nowCast ? 2 : 1) + '/0'
-    this.config.yql = 'SELECT * FROM html WHERE url="' + this.config.url + '" AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//tbody//tr' + (this.config.nowCast ? '\'|sort(field="th", descending="true")' : '//td[' + (1 + this.config.pollutionColumn) + ']\'|truncate(count=24)')
+    this.config.yql = 'env \'store://datatables.org/alltableswithkeys\'; SELECT * FROM htmlstring WHERE url="' + this.config.url + '" AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//tbody//tr' + (this.config.nowCast ? '\'|sort(field="th", descending="true")' : '//td[' + (1 + this.config.pollutionColumn) + ']\'|truncate(count=24)')
 
     // load data
     this.load();
@@ -88,12 +88,19 @@ Module.register('MMM-SmokedMirror', {
           if(self.config.nowCast) {
             var i=1
             var pollutions = [null]
-            for (let item of response.query.results.tr) {
-              if((pollution = parseFloat(item.td[self.config.pollutionColumn].replace(',', '.')))) {
-                pollutions[i++] = pollution
-                if(i > 12){
-                  break
+            for (let item of response.query.results.result.split(/tr>[\r\n]<tr+/)) {
+              pollution = item.match(/\d+,\d+/gmi)
+              if (pollution) {
+                pollution = parseFloat(pollution[self.config.pollutionColumn].replace(',', '.'))
+                if (pollution) {
+                  pollutions[i++] = pollution
+                  if (i > 12) {
+                    break
+                  }
                 }
+              }
+              else {
+                break
               }
             }
             // math from: https://en.wikipedia.org/wiki/NowCast_(air_quality_index)
@@ -109,9 +116,16 @@ Module.register('MMM-SmokedMirror', {
             self.data.pollution = Math.round(100*ncl/ncm)/100
           }
           else {
-            for (let item of response.query.results.td) {
-              if((pollution = parseFloat(item.replace(',', '.')))) {
-                self.data.pollution = pollution
+            for (let item of response.query.results.result.split(/>[\r\n]<+/)) {
+              pollution = item.match(/\d+,\d+/gmi)
+              if (pollution) {
+                pollution = parseFloat(pollution[0].replace(',', '.'))
+                if (pollution) {
+                  self.data.pollution = pollution
+                }
+                else {
+                  break
+                }
               }
               else {
                 break
@@ -193,7 +207,7 @@ Module.register('MMM-SmokedMirror', {
           Log.error(response.error.description)
         }
         else {
-          self.data.location = response.query.results.caption.replace(/Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
+          //self.data.location = response.query.results.caption.replace(/Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
           self.updateDom(self.animationSpeed);
         }
       });
