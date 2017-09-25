@@ -199,7 +199,7 @@ Module.register('MMM-SmokedMirror', {
     else                                               return this.translate('Hazardous');
   },
   loadLocation: function() {
-    var yql = 'SELECT * FROM html WHERE url=\'' + this.config.url + '\' AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//caption\''
+    var yql = 'env \'store://datatables.org/alltableswithkeys\'; SELECT * FROM htmlstring WHERE url=\'' + this.config.url + '\' AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//caption\''
     var self = this
     YUI().use('node', 'event', 'yql', function(Y) {
       Y.YQL(yql, function(response) {
@@ -207,7 +207,7 @@ Module.register('MMM-SmokedMirror', {
           Log.error(response.error.description)
         }
         else {
-          //self.data.location = response.query.results.caption.replace(/Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
+          self.data.location = response.query.results.result.replace(/<caption>Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
           self.updateDom(self.animationSpeed);
         }
       });
