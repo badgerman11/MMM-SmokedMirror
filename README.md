@@ -18,13 +18,13 @@ To run the module, you need to add the following data to your config.js file.
   position: 'top_center', // you may choose any location
   config: {
     stationID: 488, // the station ID to check the pollution for
-    pollutionType: 'PM2,5' // tupe of the pollution to show
+    pollutionType: 'PM2,5' // type of the pollution to show
   }
 }
 ```
 ### StationID
 Go to your station at [GIOŚ](http://powietrze.gios.gov.pl/pjp/station/search)
-Use the part behind /station_details/info/ for your station.
+Use the ID from URL (digits after /station_details/info/) for your station.
 For example http://powietrze.gios.gov.pl/pjp/current/station_details/info/544 would be:
 ```
   stationID: 544
@@ -45,5 +45,3 @@ You may want to set the following options in the config section as well:
 | `updateInterval` | How often does the content needs to be fetched? (Minutes)<br><br>**Possible values:** `1` to `144`<br>**Default value:** `30` (30 minutes) | 
 
 ### Known Issues
-
-Due to the [YQL](https://developer.yahoo.com/yql/) restrictions it is not possible to have fresh data each time.
