@@ -16,9 +16,15 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Content Include="package.json">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="screen.png" />
     <Content Include="README.md" />
     <Compile Include="MMM-SmokedMirror.js" />
+    <Compile Include="node_helper.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="String.format.js" />
     <Content Include="translations\en.json" />
     <Content Include="translations\pl.json" />

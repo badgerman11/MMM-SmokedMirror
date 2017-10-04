@@ -1,0 +1,27 @@
+{
+  "name": "MMM-SmokedMirror",
+  "version": "2.0.0",
+  "description": "Air Polution Module for the Magic Mirror.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Santanachia/MMM-SmokedMirror.git"
+  },
+  "keywords": [
+    "MagicMirror",
+    "air polution"
+  ],
+  "author": "Marcin Bielecki",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Santanachia/MMM-SmokedMirror/issues"
+  },
+  "homepage": "https://github.com/Santanachia/MMM-SmokedMirror#readme",
+  "dependencies": {
+    "request": "~2.83.0",
+    "jsdom": "~11.2.0"
+  },
+  "devDependencies": {
+    "request": "latest",
+    "jsdom": "latest"
+  }
+}

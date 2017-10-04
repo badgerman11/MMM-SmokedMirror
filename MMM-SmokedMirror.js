@@ -44,22 +44,13 @@ Module.register('MMM-SmokedMirror', {
         break;
     }
     switch(this.config.pollutionType) {
-      case 'PM10':
-      case 'PM2,5':
-      case 'O3':
-      case 'NO2':
-      case 'SO2':
-      case 'C6H6':
-        this.config.units = 'µg/m³'
-        break;
       case 'CO':
         this.config.units = 'mg/m³'
         break;
+      default:
+        this.config.units = 'µg/m³'
+        break;
     }
-
-    // uri to gather data
-    this.config.url = 'http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + this.config.stationID + '/' + (this.config.nowCast ? 2 : 1) + '/0'
-    this.config.yql = 'env \'store://datatables.org/alltableswithkeys\'; SELECT * FROM htmlstring WHERE url="' + this.config.url + '" AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//tbody//tr' + (this.config.nowCast ? '\'|sort(field="th", descending="true")' : '//td[' + (1 + this.config.pollutionColumn) + ']\'|truncate(count=24)')
 
     // load data
     this.load();
@@ -71,73 +62,34 @@ Module.register('MMM-SmokedMirror', {
   },
   load: function(){
 
-    if(!this.data.location) {
-      this.loadLocation();
-    }
-
     var self = this;
 
-    YUI().use('node', 'event', 'yql', function(Y) {
-      Y.YQL(self.config.yql, function(response) {
-        if(response.error) {
-          Log.error(response.error.description)
-        }
-        else {
-          var pollution
-          
-          if(self.config.nowCast) {
-            var i=1
-            var pollutions = [null]
-            for (let item of response.query.results.result.split(/tr>[\r\n]<tr+/)) {
-              pollution = item.match(/\d+,\d+/gmi)
-              if (pollution) {
-                pollution = parseFloat(pollution[self.config.pollutionColumn].replace(',', '.'))
-                if (pollution) {
-                  pollutions[i++] = pollution
-                  if (i > 12) {
-                    break
-                  }
-                }
-              }
-              else {
-                break
-              }
-            }
-            // math from: https://en.wikipedia.org/wiki/NowCast_(air_quality_index)
-            var w = Math.min(pollutions) / Math.max(pollutions)
-            if(self.config.pollutionType != 'O3') {
-              w = w > .5 ? w : .5
-            }
-            var ncl = 0, ncm = 0
-            for (i = 1; i <= 12; i++) {
-              ncl += Math.pow(w, i - 1) * pollutions[i];
-              ncm += Math.pow(w, i - 1)
-            }
-            self.data.pollution = Math.round(100*ncl/ncm)/100
-          }
-          else {
-            for (let item of response.query.results.result.split(/>[\r\n]<+/)) {
-              pollution = item.match(/\d+,\d+/gmi)
-              if (pollution) {
-                pollution = parseFloat(pollution[0].replace(',', '.'))
-                if (pollution) {
-                  self.data.pollution = pollution
-                }
-                else {
-                  break
-                }
-              }
-              else {
-                break
-              }
-            }
-          }
+    if(!this.data.location) {
+      this.sendSocketNotification('GET_LOC', self.config.stationID)
+    }
 
-          self.loaded = true;
-          self.updateDom(self.animationSpeed);
-        }
-      });
-    });
+    this.sendSocketNotification('GET_DATA', { stationID: self.config.stationID, pollutionType: self.config.pollutionType.replace(',', '.'), nowCast: self.config.nowCast })
+    
+  },
+  socketNotificationReceived: function (notification, payload) {
+    var self = this;
+    switch (notification) {
+      case 'DATA':
+        self.data.pollution = payload
+        self.loaded = true;
+        self.updateDom(self.animationSpeed);
+        break;
+      case 'LOC':
+        self.data.location = payload
+        self.updateDom(self.animationSpeed);
+        break;
+      case 'ERR':
+        console.log('error :(', payload)
+        break;
+      default:
+        console.log ('wrong socketNotification', notification, payload)
+        break;
+    }
   },
   html: {
     icon: '<i class="fa fa-leaf"></i>',
@@ -178,7 +130,7 @@ Module.register('MMM-SmokedMirror', {
           this.html.icon,
           this.config.showValues ? this.config.pollutionType + ' ' : '',
           this.impact(this.data.pollution),
-          (this.config.showValues ? this.html.values.format(this.data.pollution.toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm, this.config.nowCast ? '' : this.config.units) : ''),
+          (this.config.showValues ? this.html.values.format((Math.round(this.data.pollution * 10) / 10).toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm, this.config.nowCast ? '' : this.config.units) : ''),
           (this.config.showLocation && this.data.location ? this.html.city.format(this.data.location) : '')
         )
     }
@@ -197,20 +149,5 @@ Module.register('MMM-SmokedMirror', {
     else if(pollution < this.config.pollutionNorm * 4) return this.translate('Unhealthy');
     else if(pollution < this.config.pollutionNorm * 6) return this.translate('VeryUnhealthy');
     else                                               return this.translate('Hazardous');
-  },
-  loadLocation: function() {
-    var yql = 'env \'store://datatables.org/alltableswithkeys\'; SELECT * FROM htmlstring WHERE url=\'' + this.config.url + '\' AND xpath=\'//div[@class="container"]//div[@class="row"]//div[@class="table-responsive"]//table//caption\''
-    var self = this
-    YUI().use('node', 'event', 'yql', function(Y) {
-      Y.YQL(yql, function(response) {
-        if(response.error) {
-          Log.error(response.error.description)
-        }
-        else {
-          self.data.location = response.query.results.result.replace(/<caption>Dane pomiarowe tabele +|\t+|\(.+|\n +/gmi, '')
-          self.updateDom(self.animationSpeed);
-        }
-      });
-    });
   },
 });
