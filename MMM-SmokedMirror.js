@@ -1,56 +1,49 @@
 "use strict"
 
+var pollutionTypeH = {
+      PM10: 'PM10',
+      'PM2.5': 'PM2.5',
+      '03': 'O<sub>3</sub>',
+      NO2: 'NO<sub>2</sub>',
+      SO2: 'SO<sub>2</sub>',
+      C6H6: 'C<sub>6</sub>H<sub>6</sub>',
+      CO: 'CO'
+    }
+var pollutionNorm = {
+  PM10: 50,
+  'PM2.5': 25,
+  '03': 120,
+  NO2: 200,
+  SO2: 125,
+  C6H6: 5,
+  CO: 10
+}
+var units = {
+  PM10: 'µg/m³',
+  'PM2.5': 'µg/m³',
+  '03': 'µg/m³',
+  NO2: 'µg/m³',
+  SO2: 'µg/m³',
+  C6H6: 'µg/m³',
+  CO: 'mg/m³'
+}
+
 Module.register('MMM-SmokedMirror', {
-    defaults: {
+  defaults: {
     showLocation: true,
     showValues: false,
     updateInterval: 30,
     animationSpeed: 1000,
     nowCast: false,
     showUnits: false,
+    pollutionType: 'All'
   },
   start: function(){
     Log.info('Starting module: ' + this.name);
 
-    //type of pollution
-    switch(this.config.pollutionType) {
-      case 'PM10':
-        this.config.pollutionColumn = 0;
-        this.config.pollutionNorm = 50;
-        break;
-      case 'PM2,5':
-        this.config.pollutionColumn = 1;
-        this.config.pollutionNorm = 25;
-        break;
-      case 'O3':
-        this.config.pollutionColumn = 2;
-        this.config.pollutionNorm = 120;
-        break;
-      case 'NO2':
-        this.config.pollutionColumn = 3;
-        this.config.pollutionNorm = 200;
-        break;
-      case 'SO2':
-        this.config.pollutionColumn = 4;
-        this.config.pollutionNorm = 125;
-        break;
-      case 'C6H6':
-        this.config.pollutionColumn = 5;
-        this.config.pollutionNorm = 5;
-        break;
-      case 'CO':
-        this.config.pollutionColumn = 6;
-        this.config.pollutionNorm = 10;
-        break;
-    }
-    switch(this.config.pollutionType) {
-      case 'CO':
-        this.config.units = 'mg/m³'
-        break;
-      default:
-        this.config.units = 'µg/m³'
-        break;
-    }
+    this.config.pollutionTypeH = pollutionTypeH
+    this.config.pollutionNorm = pollutionNorm
+    this.config.units = units
 
     // load data
     this.load();
@@ -64,7 +57,7 @@ Module.register('MMM-SmokedMirror', {
 
     var self = this;
 
-    if(!this.data.location) {
+    if(!this.data.location && this.config.showLocation) {
       this.sendSocketNotification('GET_LOC', self.config.stationID)
     }
 
@@ -75,7 +68,7 @@ Module.register('MMM-SmokedMirror', {
     var self = this;
     switch (notification) {
       case 'DATA':
-        self.data.pollution = payload
+        self.data.pollution = payload.sort(self.compare);
         self.loaded = true;
         self.updateDom(self.animationSpeed);
         break;
@@ -95,16 +88,17 @@ Module.register('MMM-SmokedMirror', {
     icon: '<i class="fa fa-leaf"></i>',
     city: '<div class="xsmall">{0}</div>',
     values: '<span class="small light"> ({0} {1} {2}{3})</span>',
-    quality: '<div>{0} {1}{2}{3}{4}</div>'
+    quality: '<table><caption>{0}</caption><tbody>{1}</tbody></table>',
+    qualityTr: '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>'
   },
   getScripts: function() {
-    return [
-      '//yui-s.yahooapis.com/3.8.0/build/yui/yui-min.js',
-      'String.format.js'
-    ];
+    return ['String.format.js'];
   },
   getStyles: function() {
-    return ['https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css'];
+    return [
+      'https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css',
+      'StyleSheet.css',
+    ];
   },
   getDom: function() {
     var wrapper = document.createElement('div');
@@ -116,8 +110,8 @@ Module.register('MMM-SmokedMirror', {
       wrapper.innerHTML = this.translate('Loading');
       wrapper.className = 'dimmed light small';
     }
-    else if(this.config.nowCast && this.config.pollutionType != 'PM10' && this.config.pollutionType != 'PM2,5' && this.config.pollutionType != 'O3') {
-      wrapper.innerHTML = this.translate('NowCastErr') + 'PM10; PM2,5; O3';
+    else if(this.config.nowCast && this.config.pollutionType != 'All' && this.config.pollutionType != 'PM10' && this.config.pollutionType != 'PM2.5' && this.config.pollutionType != 'O3') {
+      wrapper.innerHTML = this.translate('NowCastErr') + 'PM10; PM2.5; O3';
       wrapper.className = 'dimmed light small';
     }
     else if (!this.data.pollution) {
@@ -125,14 +119,19 @@ Module.register('MMM-SmokedMirror', {
       wrapper.className = 'dimmed light small';
     }
     else {
-      wrapper.innerHTML = 
-        this.html.quality.format(
+      var tbody = ''
+      for (let item of this.data.pollution) {
+        tbody += this.html.qualityTr.format(
           this.html.icon,
-          this.config.showValues ? this.config.pollutionType + ' ' : '',
-          this.impact(this.data.pollution),
-          (this.config.showValues ? this.html.values.format((Math.round(this.data.pollution * 10) / 10).toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm, this.config.nowCast ? '' : this.config.units) : ''),
-          (this.config.showLocation && this.data.location ? this.html.city.format(this.data.location) : '')
+          this.config.pollutionTypeH[item.key],
+          this.impact(item.value, item.key),
+          (this.config.showValues ? this.html.values.format((Math.round(item.value * 10) / 10).toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm[item.key], this.config.units[item.key]) : '')
         )
+      }
+      wrapper.innerHTML = this.html.quality.format(
+        (this.config.showLocation && this.data.location ? this.html.city.format(this.data.location) : ''),
+        tbody
+      )
     }
     return wrapper;
   },
@@ -142,12 +141,20 @@ Module.register('MMM-SmokedMirror', {
       pl: 'translations/pl.json'
     }
   },
-  impact: function(pollution) {
-         if(pollution < this.config.pollutionNorm)     return this.translate('Good');
-    else if(pollution < this.config.pollutionNorm * 2) return this.translate('Moderate');
-    else if(pollution < this.config.pollutionNorm * 3) return this.translate('Low');
-    else if(pollution < this.config.pollutionNorm * 4) return this.translate('Unhealthy');
-    else if(pollution < this.config.pollutionNorm * 6) return this.translate('VeryUnhealthy');
-    else                                               return this.translate('Hazardous');
+  impact: function(pollution, type) {
+         if(pollution < this.config.pollutionNorm[type])     return this.translate('Good');
+    else if(pollution < this.config.pollutionNorm[type] * 2) return this.translate('Moderate');
+    else if(pollution < this.config.pollutionNorm[type] * 3) return this.translate('Low');
+    else if(pollution < this.config.pollutionNorm[type] * 4) return this.translate('Unhealthy');
+    else if(pollution < this.config.pollutionNorm[type] * 6) return this.translate('VeryUnhealthy');
+    else                                                     return this.translate('Hazardous');
   },
+  compare: function(a, b) {
+    if (a.value * pollutionNorm[a.key] < b.value * pollutionNorm[b.key])
+      return -1;
+    else if (a.value * pollutionNorm[a.key] > b.value * pollutionNorm[b.key])
+      return 1;
+    else
+      return 0;
+  }
 });

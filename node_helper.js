@@ -17,44 +17,29 @@ module.exports = NodeHelper.create({
           if (!error & response.statusCode == 200) {
             var res = JSON.parse(body)
             if (res.isError) {
-              self.sendSocketNotification('ERR', { type: 'response error', res.errorMessage });
+              console.log('isError', res)
+              //self.sendSocketNotification('ERR', { type: 'response error', res.errorMessage });
             }
             else {
-              var pollutionFound = false;
+              var pollutions = []
               for (let item of res.chartElements) {
-                if (item.key == payload.pollutionType) {
-                  pollutionFound = true;
-                  if (payload.nowCast) {
-                    var i = 1
-                    var pollutions = [null]
-                    for (let pol of item.values) {
-                      if (pol[1]) {
-                        pollutions[i++] = pol[1]
-                        if (i >= 12) {
-                          break
-                        }
-                      }
-                    }
-                    // math from: https://en.wikipedia.org/wiki/NowCast_(air_quality_index)
-                    var w = Math.min(pollutions) / Math.max(pollutions)
-                    if (payload.pollutionType != 'O3') {
-                      w = w > .5 ? w : .5
-                    }
-                    var ncl = 0, ncm = 0
-                    for (i = 1; i < pollutions.length; i++) {
-                      ncl += Math.pow(w, i - 1) * pollutions[i];
-                      ncm += Math.pow(w, i - 1)
-                    }
-                    self.sendSocketNotification('DATA', ncl / ncm);
+                if ('All' == payload.pollutionType || item.key == payload.pollutionType) {
+                  if (!item.values[0][1]) {
+                    item.values.shift();
+                  }
+                  var date = new Date(item.values[0][0])
+                  if (payload.nowCast && ('PM10' == item.key || 'PM2.5' == item.key || 'O3' == item.key)) {
+                    pollutions.push({key: item.key, value: nowcast(item.values, item.key), time: date});
+                  }
+                  else if ('CO' == item.key) {
+                    pollutions.push({key: item.key, value: item.values[0][1] / 1000, time: date});
                   }
                   else {
-                    self.sendSocketNotification('DATA', payload.pollutionType == 'CO' ? item.values[0][1] / 1000 : item.values[0][1]);
+                    pollutions.push({key: item.key, value: item.values[0][1], time: date});
                   }
                 }
               }
-              if (!pollutionFound) {
-                self.sendSocketNotification('DATA', null);
-              }
+              self.sendSocketNotification('DATA', pollutions)
             }
           }
         });
@@ -73,3 +58,27 @@ module.exports = NodeHelper.create({
     }
   }
 });
+
+var nowcast = function(values, pollutionType) {
+  var i = 1
+  var pollutions = [null]
+  for (let pol of values) {
+    if (pol[1]) {
+      pollutions[i++] = pol[1]
+      if (i >= 12) {
+        break
+      }
+    }
+  }
+  // math from: https://en.wikipedia.org/wiki/NowCast_(air_quality_index)
+  var w = Math.min(pollutions) / Math.max(pollutions)
+  if (pollutionType != 'O3') {
+    w = w > .5 ? w : .5
+  }
+  var ncl = 0, ncm = 0
+  for (i = 1; i < pollutions.length; i++) {
+    ncl += Math.pow(w, i - 1) * pollutions[i];
+    ncm += Math.pow(w, i - 1)
+  }
+  return (ncl / ncm);
+}
