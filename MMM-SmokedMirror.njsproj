@@ -26,6 +26,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="String.format.js" />
+    <Content Include="StyleSheet.css">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="translations\en.json" />
     <Content Include="translations\pl.json" />
   </ItemGroup>
