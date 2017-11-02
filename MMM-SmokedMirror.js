@@ -1,14 +1,14 @@
 "use strict"
 
 var pollutionTypeH = {
-      PM10: 'PM10',
-      'PM2.5': 'PM2.5',
-      '03': 'O<sub>3</sub>',
-      NO2: 'NO<sub>2</sub>',
-      SO2: 'SO<sub>2</sub>',
-      C6H6: 'C<sub>6</sub>H<sub>6</sub>',
-      CO: 'CO'
-    }
+    PM10: 'PM10',
+    'PM2.5': 'PM2.5',
+    '03': 'O<sub>3</sub>',
+    NO2: 'NO<sub>2</sub>',
+    SO2: 'SO<sub>2</sub>',
+    C6H6: 'C<sub>6</sub>H<sub>6</sub>',
+    CO: 'CO'
+  }
 var pollutionNorm = {
   PM10: 50,
   'PM2.5': 25,
@@ -36,7 +36,8 @@ Module.register('MMM-SmokedMirror', {
     animationSpeed: 1000,
     nowCast: false,
     showUnits: false,
-    pollutionType: 'All'
+    pollutionType: 'All',
+    colors: false,
   },
   start: function(){
     Log.info('Starting module: ' + this.name);
@@ -89,7 +90,7 @@ Module.register('MMM-SmokedMirror', {
     city: '<div class="xsmall">{0}</div>',
     values: '<span class="small light"> ({0} {1} {2}{3})</span>',
     quality: '<table><caption>{0}</caption><tbody>{1}</tbody></table>',
-    qualityTr: '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>'
+    qualityTr: '<tr{0}><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>'
   },
   getScripts: function() {
     return ['String.format.js'];
@@ -122,6 +123,7 @@ Module.register('MMM-SmokedMirror', {
       var tbody = ''
       for (let item of this.data.pollution) {
         tbody += this.html.qualityTr.format(
+          this.config.colors ? ' style="color:' + this.color(item.value / this.config.pollutionNorm[item.key]) + '"' : '',
           this.html.icon,
           this.config.pollutionTypeH[item.key],
           this.impact(item.value, item.key),
@@ -150,11 +152,32 @@ Module.register('MMM-SmokedMirror', {
     else                                                     return this.translate('Hazardous');
   },
   compare: function(a, b) {
-    if (a.value * pollutionNorm[a.key] < b.value * pollutionNorm[b.key])
-      return -1;
-    else if (a.value * pollutionNorm[a.key] > b.value * pollutionNorm[b.key])
+    if (a.value / pollutionNorm[a.key] < b.value / pollutionNorm[b.key])
       return 1;
+    else if (a.value / pollutionNorm[a.key] > b.value / pollutionNorm[b.key])
+      return -1;
     else
       return 0;
-  }
+  },
+  color: function (x) {
+    //color palete from https://en.wikipedia.org/wiki/Air_quality_index#india
+    return (
+      '#' + [
+        -13.3333 * Math.pow(x, 2) + 87.3143 * x + 120.162,                         //R https://www.wolframalpha.com/input/?i=quadratic+fit+%7B0,121%7D,%7B1,187%7D,%7B2,255%7D,%7B3,255%7D,%7B4,255%7D,%7B6,165%7D  
+        7.15942 * Math.pow(x, 3) - 65.911 * Math.pow(x, 2) + 114.636 * x + 177.93, //G https://www.wolframalpha.com/input/?i=cubic+fit+%7B0,188%7D,%7B10,208%7D,%7B20,207%7D,%7B30,154%7D,%7B40,14%7D,%7B60,43%7D
+        4.64286 * Math.pow(x, 2) - 38.7286 * x + 107.371                           //B https://www.wolframalpha.com/input/?i=quadratic+fit+%7B0,106%7D,%7B1,76%7D,%7B2,46%7D,%7B3,37%7D,%7B4,23%7D,%7B6,43%7D
+      ]
+      .map(Math.round)
+      .map(c => {
+          if (255 < c)
+            c = 255
+          else if (0 > c)
+            c = 0
+
+          var hex = c.toString(16);
+          return hex.length == 1 ? "0" + hex : hex;
+      })
+      .join('')
+    );
+  },
 });
