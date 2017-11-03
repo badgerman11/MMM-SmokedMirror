@@ -3,7 +3,7 @@
 var pollutionTypeH = {
     PM10: 'PM10',
     'PM2.5': 'PM2.5',
-    '03': 'O<sub>3</sub>',
+    O3: 'O<sub>3</sub>',
     NO2: 'NO<sub>2</sub>',
     SO2: 'SO<sub>2</sub>',
     C6H6: 'C<sub>6</sub>H<sub>6</sub>',
@@ -12,7 +12,7 @@ var pollutionTypeH = {
 var pollutionNorm = {
   PM10: 50,
   'PM2.5': 25,
-  '03': 120,
+  O3: 120,
   NO2: 200,
   SO2: 125,
   C6H6: 5,
@@ -21,7 +21,7 @@ var pollutionNorm = {
 var units = {
   PM10: 'µg/m³',
   'PM2.5': 'µg/m³',
-  '03': 'µg/m³',
+  O3: 'µg/m³',
   NO2: 'µg/m³',
   SO2: 'µg/m³',
   C6H6: 'µg/m³',

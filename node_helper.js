@@ -60,25 +60,39 @@ module.exports = NodeHelper.create({
 });
 
 var nowcast = function(values, pollutionType) {
-  var i = 1
-  var pollutions = [null]
+  var len = 'O3' == pollutionType ? 8 : 12
+  var pollutions = []
   for (let pol of values) {
     if (pol[1]) {
-      pollutions[i++] = pol[1]
-      if (i >= 12) {
+      pollutions.push(pol[1])
+      if (pollutions.length >= len) {
         break
       }
     }
   }
+
   // math from: https://en.wikipedia.org/wiki/NowCast_(air_quality_index)
-  var w = Math.min(pollutions) / Math.max(pollutions)
+  var w = Math.min(...pollutions) / Math.max(...pollutions)
+
+  if (1 == w) {
+    return pollutions[0]
+  }
+
   if (pollutionType != 'O3') {
     w = w > .5 ? w : .5
+
+    if (.5 == w) {
+      var ncl = 0
+      for (i = 0; i < pollutions.length; i++) {
+        ncl += Math.pow(.5, i + 1) * pollutions[i];
+      }
+      return (ncl);
+    }
   }
   var ncl = 0, ncm = 0
-  for (i = 1; i < pollutions.length; i++) {
-    ncl += Math.pow(w, i - 1) * pollutions[i];
-    ncm += Math.pow(w, i - 1)
+  for (i = 0; i < pollutions.length; i++) {
+    ncl += Math.pow(w, i) * pollutions[i];
+    ncm += Math.pow(w, i)
   }
   return (ncl / ncm);
 }
