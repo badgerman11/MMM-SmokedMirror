@@ -38,6 +38,7 @@ Module.register('MMM-SmokedMirror', {
     showUnits: false,
     pollutionType: 'All',
     colors: false,
+    fontSize: 100,
   },
   start: function(){
     Log.info('Starting module: ' + this.name);
@@ -45,6 +46,8 @@ Module.register('MMM-SmokedMirror', {
     this.config.pollutionTypeH = pollutionTypeH
     this.config.pollutionNorm = pollutionNorm
     this.config.units = units
+
+    this.config.fontSize = parseInt(this.config.fontSize)
 
     // load data
     this.load();
@@ -88,8 +91,8 @@ Module.register('MMM-SmokedMirror', {
   html: {
     icon: '<i class="fa fa-leaf"></i>',
     city: '<div class="xsmall">{0}</div>',
-    values: '<span class="small light"> ({0} {1} {2}{3})</span>',
-    quality: '<table><caption>{0}</caption><tbody>{1}</tbody></table>',
+    values: '<span class="light"> ({0} {1} {2}{3})</span>',
+    quality: '<table><caption>{0}</caption><tbody style="font-size: {1}%">{2}</tbody></table>',
     qualityTr: '<tr{0}><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>'
   },
   getScripts: function() {
@@ -132,6 +135,7 @@ Module.register('MMM-SmokedMirror', {
       }
       wrapper.innerHTML = this.html.quality.format(
         (this.config.showLocation && this.data.location ? this.html.city.format(this.data.location) : ''),
+        this.config.fontSize,
         tbody
       )
     }

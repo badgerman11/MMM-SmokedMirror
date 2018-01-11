@@ -8,3 +8,6 @@ td:not(:first-of-type) {
 tr:not(:first-of-type) {
   font-size: smaller;
 }
+td span.light {
+  font-size: 70%;
+}
