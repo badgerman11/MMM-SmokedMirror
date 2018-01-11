@@ -30,6 +30,7 @@ var units = {
 
 Module.register('MMM-SmokedMirror', {
   defaults: {
+    showDescription: true,
     showLocation: true,
     showValues: false,
     updateInterval: 30,
@@ -129,7 +130,7 @@ Module.register('MMM-SmokedMirror', {
           this.config.colors ? ' style="color:' + this.color(item.value / this.config.pollutionNorm[item.key]) + '"' : '',
           this.html.icon,
           this.config.pollutionTypeH[item.key],
-          this.impact(item.value, item.key),
+          this.config.showDescription ? this.impact(item.value, item.key) : '',
           (this.config.showValues ? this.html.values.format((Math.round(item.value * 10) / 10).toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm[item.key], this.config.units[item.key]) : '')
         )
       }
