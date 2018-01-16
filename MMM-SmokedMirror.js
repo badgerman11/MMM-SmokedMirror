@@ -28,8 +28,14 @@ var units = {
   CO: 'mg/m³'
 }
 
+Date.prototype.addHours = function (h) {
+  this.setHours(this.getHours() + h);
+  return this;
+}
+
 Module.register('MMM-SmokedMirror', {
   defaults: {
+    showDates: false,
     showDescription: true,
     showLocation: true,
     showValues: false,
@@ -92,9 +98,9 @@ Module.register('MMM-SmokedMirror', {
   html: {
     icon: '<i class="fa fa-leaf"></i>',
     city: '<div class="xsmall">{0}</div>',
-    values: '<span class="light"> ({0} {1} {2}{3})</span>',
+    values: '({0} {1} {2}{3})',
     quality: '<table><caption>{0}</caption><tbody style="font-size: {1}%">{2}</tbody></table>',
-    qualityTr: '<tr{0}><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>'
+    qualityTr: '<tr{0}><td>{1}</td><td>{2}</td><td>{3}</td><td class="light">{4}</td><td class="light">{5}</td></tr>'
   },
   getScripts: function() {
     return ['String.format.js'];
@@ -126,12 +132,14 @@ Module.register('MMM-SmokedMirror', {
     else {
       var tbody = ''
       for (let item of this.data.pollution) {
+        var time = new Date(item.time), now = new Date();
         tbody += this.html.qualityTr.format(
           this.config.colors ? ' style="color:' + this.color(item.value / this.config.pollutionNorm[item.key]) + '"' : '',
           this.html.icon,
           this.config.pollutionTypeH[item.key],
           this.config.showDescription ? this.impact(item.value, item.key) : '',
-          (this.config.showValues ? this.html.values.format((Math.round(item.value * 10) / 10).toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm[item.key], this.config.units[item.key]) : '')
+          (this.config.showValues ? this.html.values.format((Math.round(item.value * 10) / 10).toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm[item.key], this.config.units[item.key]) : ''),
+          this.config.showDates || time.addHours(2) < now ? '(' + item.time + ')' : ''
         )
       }
       wrapper.innerHTML = this.html.quality.format(

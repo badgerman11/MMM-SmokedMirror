@@ -42,6 +42,7 @@ You may want to set the following options in the config section as well:
 | `lang` | Change the language<br><br>**Possible values:** `en` or `pl` | 
 | `nowCast` | Show [NowCast](https://en.wikipedia.org/wiki/NowCast_(air_quality_index)) instead of hourly data<br><br>* works only with one of polutionType: `PM10` or `PM2.5` or `O3`<br>**Possible values:** `true` or `false`.<br>**Default value:** `false` | 
 | `pollutionType` | Type of pollution to show<br><br>**Possible values:** `PM10`, `PM2.5`, `O3`, `NO2`, `SO2`, `C6H6`, `CO`, `Hi`<br>**Default value:** `All` | 
+| `showDates` | Toggle last measurement printing<br><br>turned on automatically if last measurement is older than 2h<br>**Possible values:** `true` or `false`<br>**Default value:** `false` |
 | `showDescription` | Toggle description printing<br><br>**Possible values:** `true` or `false`<br>**Default value:** `true` |
 | `showLocation` | Toggle location printing<br><br>**Possible values:** `true` or `false`<br>**Default value:** `true` |
 | `showUnits` | Toggle units printing<br><br>* works only with showValues: `true`<br>**Possible values:** `true` or `false`<br>**Default value:** `false` | 
