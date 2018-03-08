@@ -42,9 +42,6 @@ module.exports = NodeHelper.create({
                   if (payload.nowCast && ('PM10' == item.key || 'PM2.5' == item.key || 'O3' == item.key)) {
                     pollutions.push({ key: item.key, value: nowcast(item.values, item.key), time: item.values[0][0]});
                   }
-                  else if ('CO' == item.key) {
-                    pollutions.push({ key: item.key, value: item.values[0][1] / 1000, time: item.values[0][0]});
-                  }
                   else {
                     pollutions.push({ key: item.key, value: item.values[0][1], time: item.values[0][0]});
                   }

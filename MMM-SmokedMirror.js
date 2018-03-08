@@ -98,7 +98,7 @@ Module.register('MMM-SmokedMirror', {
   html: {
     icon: '<i class="fa fa-leaf"></i>',
     city: '<div class="xsmall">{0}</div>',
-    values: '({0} {1} {2}{3})',
+    values: '{0} {1} {2}{3}',
     quality: '<table><caption>{0}</caption><tbody style="font-size: {1}%">{2}</tbody></table>',
     qualityTr: '<tr{0}><td>{1}</td><td>{2}</td><td>{3}</td><td class="light">{4}</td><td class="light">{5}</td></tr>'
   },
@@ -138,7 +138,7 @@ Module.register('MMM-SmokedMirror', {
           this.html.icon,
           this.config.pollutionTypeH[item.key],
           this.config.showDescription ? this.impact(item.value, item.key) : '',
-          (this.config.showValues ? this.html.values.format((Math.round(item.value * 10) / 10).toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm[item.key], this.config.units[item.key]) : ''),
+          (this.config.showValues ? (this.config.showDescription ? '(' : '') + this.html.values.format((Math.round(item.value * 10) / 10).toString().replace('.', ','), this.translate('Of'), this.config.pollutionNorm[item.key], this.config.units[item.key]) + (this.config.showDescription ? ')' : '') : ''),
           this.config.showDates || time.addHours(2) < now ? '(' + item.time + ')' : ''
         )
       }
