@@ -1,13 +1,5 @@
 {
-  "NoStationID": "Ustaw proszę <i>stationID</i> w konfigu dla modułu: ",
-  "Loading": "Wczytywanie jakości powietrza ...",
-  "NoData": "brak danych dla ",
-  "Of": "z",
-  "Good": "Dobra",
-  "Moderate": "Średnia",
-  "Low": "Niska",
-  "Unhealthy": "Zła",
-  "VeryUnhealthy": "Bardzo zła",
-  "Hazardous": "Toksyczna",
-  "NowCastErr": "NowCast działa wyłącznie z jednym z: "
+  "missingCoords": "Proszę ustaw <i>współrzędne</i> w konfigu",
+  "missingapiKey": "Proszę ustaw <i>apiKey</i> w konfigu",
+  "Loading": "Wczytywanie jakości powietrza ..."
 }

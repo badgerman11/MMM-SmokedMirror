@@ -11,6 +11,17 @@
     "air polution"
   ],
   "author": "Marcin Bielecki",
+  "contributors": [
+    {
+      "name": "Mateusz Starzec",
+      "url": "https://github.com/mstarzec386"
+    },
+    {
+      "name": "Marcin Bielecki",
+      "email": "santanachia@gmail.com",
+      "url": "https://github.com/Santanachia"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Santanachia/MMM-SmokedMirror/issues"

@@ -1,13 +1,5 @@
 {
-  "NoStationID": "Please set the <i>stationID</i> in the config for module: ",
-  "Loading": "Loading air quality data ...",
-  "NoData": "No data for ",
-  "Of": "of",
-  "Good": "Good",
-  "Moderate": "Moderate",
-  "Low": "Low",
-  "Unhealthy": "Unhealthy",
-  "VeryUnhealthy": "Very Unhealthy",
-  "Hazardous": "Hazardous",
-  "NowCastErr":  "NowCast works only with one of: "
+  "missingCoords": "Please set the <i>coordinates</i> in the module config file",
+  "missingapiKey": "Please set the <i>apiKey</i> in the module config file",
+  "Loading": "Loading air quality data ..."
 }
