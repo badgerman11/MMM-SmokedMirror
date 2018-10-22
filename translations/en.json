@@ -1,5 +1,9 @@
 {
   "missingCoords": "Please set the <i>coordinates</i> in the module config file",
   "missingapiKey": "Please set the <i>apiKey</i> in the module config file",
-  "Loading": "Loading air quality data ..."
+  "Loading": "Loading air quality data ...",
+  "PIJP": "Polish Air Quality Index",
+  "CAQI": "Common Air Quality Index",
+  "AIRLY_CAQI": "Airly Common Air Quality Index",
+  "lastCheck": "Last check: "
 }

@@ -29,7 +29,7 @@ You may want to set the following options in the config section as well:
 
 | Option |  Description | 
 |---|---|
-| `AirlyIndex` | Name of Air quality index<br><br>**Possible values:** `AIRLY_CAQI`, `CAQI` and `PIJP`<br>**Default value:** `PIJP` | 
+| `AirlyIndex` | Name of Air quality index<br><br>**Possible values:** `AIRLY_CAQI`, `CAQI` and `PIJP` | 
 | `animationSpeed` | Speed of the update animation. (Milliseconds)<br><br>**Possible values:** `0` to `5000`<br>**Default value:** `1000` (1 second) | 
 | `colors` | Makes pollution colorful<br><br>**Possible values:** `true` or `false`<br>**Default value:** `false` | 
 | `fontSize` | Sets the base font-size to a percent of the default value<br><br>**Default value:** `100` | 

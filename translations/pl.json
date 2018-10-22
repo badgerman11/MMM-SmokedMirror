@@ -1,5 +1,9 @@
 {
   "missingCoords": "Proszę ustaw <i>współrzędne</i> w konfigu",
   "missingapiKey": "Proszę ustaw <i>apiKey</i> w konfigu",
-  "Loading": "Wczytywanie jakości powietrza ..."
+  "Loading": "Wczytywanie jakości powietrza ...",
+  "PIJP": "Polski Indeks Jakości Powietrza",
+  "CAQI": "Common Air Quality Index",
+  "AIRLY_CAQI": "Airly Common Air Quality Index",
+  "lastCheck": "Ostatnie sprawdzenie: "
 }

@@ -11,3 +11,7 @@
 .MMM-SmokedMirror td.light {
   font-size: 70%;
 }
+.MMM-SmokedMirror caption {
+  text-align: center;
+  opacity: 0.5;
+}

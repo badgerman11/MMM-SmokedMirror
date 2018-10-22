@@ -5,14 +5,12 @@ Module.register('MMM-SmokedMirror', {
     updateInterval: 30,
     animationSpeed: 1000,
     fontSize: 100,
-    AirlyIndex: 'PIJP',
+    AirlyIndex: false,
     colors: true,
     lang: 'en',
   },
   start: function () {
     Log.info('Starting module: ' + this.name);
-
-    console.log(this)
     
     this.config.fontSize = parseInt(this.config.fontSize);
     this.loaded = false;
@@ -54,13 +52,16 @@ Module.register('MMM-SmokedMirror', {
   },
   html: {
     table: '<table>\
-  <caption class="xsmall">{0}</caption>\
   <tbody style="font-size: {1}%;{2}"><tr><td><i class="fa fa-leaf"></i></td><td>{3}</td><td>{4}</td></tr>\
   </tbody>\
+  <caption align="bottom" class="xsmall">{0}</caption>\
 </table>',
   },
   getScripts: function () {
-    return ['String.format.js'];
+    return [
+      'String.format.js',
+      'moment.js'
+    ];
   },
   getStyles: function () {
     return [
@@ -83,8 +84,9 @@ Module.register('MMM-SmokedMirror', {
       wrapper.className = 'dimmed light small';
     }
     else {
-      wrapper.innerHTML = this.html.table.format(
-        this.data.pollution.name,
+      wrapper.innerHTML = '<span class="xsmall">' + this.translate(this.data.pollution.name) + '</span>'
+      + this.html.table.format(
+        this.translate("lastCheck") + moment().format('YYYY-MM-DD H:mm'),
         this.config.fontSize,
         this.config.colors ? ' color: ' + this.data.pollution.color : '',
         this.data.pollution.description,

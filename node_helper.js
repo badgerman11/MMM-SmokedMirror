@@ -8,10 +8,7 @@ module.exports = NodeHelper.create({
     
       switch (notification) {
         case 'GET_DATA':
-          if (!payload.AirlyIndex) {
-            return that.sendSocketNotification('ERR', { type: 'config error', msg: 'missingAirlyIndex' });
-          }
-          else if (!payload.lat || !payload.lng) {
+          if (!payload.lat || !payload.lng) {
             return that.sendSocketNotification('ERR', { type: 'config error', msg: 'missingCoords' });
           }
           else if (!payload.apiKey) {
@@ -22,7 +19,7 @@ module.exports = NodeHelper.create({
             var options = {
               host: 'airapi.airly.eu',
               port: 443,
-              path: 'https://airapi.airly.eu/v2/measurements/point?indexType=' + payload.AirlyIndex + '&lat=' + payload.lat + '&lng=' + payload.lng,
+              path: 'https://airapi.airly.eu/v2/measurements/point?lat=' + payload.lat + '&lng=' + payload.lng + (payload.AirlyIndex ? '&indexType=' + payload.AirlyIndex : ''),
               headers: {
                 apikey: payload.apiKey,
                 'Accept-Language': payload.lang
