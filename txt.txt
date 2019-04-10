@@ -1,0 +1,17 @@
+{
+  module: 'MMM-SmokedMirror',
+  position: 'top_center', // you may choose any location
+  config: {
+    lat: 50.062006, // latitude as decimal degree
+    lng: 19.940984 // longitude as decimal degree
+	colors: true
+	lang: pl
+	pollutionType: PM2.5 PM10
+	showDates: true
+	showDescription: true
+	showLocation: true
+	showValues: true
+	updateInterval: 15
+	stationID: 538
+	}
+}
