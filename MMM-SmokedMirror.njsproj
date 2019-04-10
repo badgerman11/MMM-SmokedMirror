@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{10073baf-e9ca-49ad-88c0-c8d52be6e5d8}</ProjectGuid>
+    <ProjectGuid>{8fb97c95-2468-48d4-afac-bee614b529d4}</ProjectGuid>
     <ProjectHome />
     <ProjectView>ShowAllFiles</ProjectView>
     <StartupFile>MMM-SmokedMirror.js</StartupFile>
@@ -27,7 +27,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="String.format.js" />
-    <Content Include="MMM-SmokedMirror.css">
+    <Content Include="StyleSheet.css">
       <SubType>Code</SubType>
     </Content>
     <Content Include="translations\en.json" />

@@ -1,93 +1,105 @@
 ﻿
+const request = require('request');
 const NodeHelper = require('node_helper');
-const https = require('https');
 
 module.exports = NodeHelper.create({
   socketNotificationReceived(notification, payload) {
-    var that = this;
-    
-      switch (notification) {
-        case 'GET_DATA':
-          if (!payload.lat || !payload.lng) {
-            return that.sendSocketNotification('ERR', { type: 'config error', msg: 'missingCoords' });
+    var self = this;
+    switch(notification) {
+      case 'GET_DATA':
+        request('http://powietrze.gios.gov.pl/pjp/current/station_details/table/' + payload.stationID + '/2/0', function (error, response, body) {
+          if (error) {
+            self.sendSocketNotification('ERR', { type: 'request error', msg: error });
           }
-          else if (!payload.apiKey) {
-            return that.sendSocketNotification('ERR', { type: 'config error', msg: 'missingapiKey' });
+          if (response.statusCode != 200) {
+            self.sendSocketNotification('ERR', { type: 'request statusCode', msg: response && response.statusCode });
           }
-          else {
+          if (!error & response.statusCode == 200) {
+            const jsdom = require('jsdom');
+            const { JSDOM } = jsdom;
 
-            var options = {
-              host: 'airapi.airly.eu',
-              port: 443,
-              path: 'https://airapi.airly.eu/v2/measurements/point?lat=' + payload.lat + '&lng=' + payload.lng + (payload.AirlyIndex ? '&indexType=' + payload.AirlyIndex : ''),
-              headers: {
-                apikey: payload.apiKey,
-                'Accept-Language': payload.lang,
-                Accept: 'application/json'
-              }
-            };
+            var dom = new JSDOM(body), head = dom.window.document.querySelector('thead').children[0].children, body = dom.window.document.querySelector('tbody').children
+            var res = { chartElements: [] };
 
-            https.get(options, function (resource) {
-              var data = '';
-              resource.on('data', function (chunk) {
-                data += chunk;
-              });
-              resource.on('end', function () {
-                try {
-                  data = JSON.parse(data).current.indexes[0];
-                } catch (e) {
-                  return that.sendSocketNotification('ERR', { type: 'json error', msg: e });
+            for (i = 1; i < head.length; i++) {
+              var item = {key: '', values: []}
+              item.key = head[i].textContent.replace(/[ \n\t]/gi, '').replace(',', '.')
+              for (j = 0; j < body.length - 3; j++) {
+                var val = body[j].children[i].textContent.replace(/[^\d\,]/gi, '')
+                if ('' == val) {
+                  continue;
                 }
-
-                data.id = payload.id;
-
-                return that.sendSocketNotification('DATA', data)
-
-              });
-            }).on('error', function (e) {
-              return that.sendSocketNotification('ERR', { type: 'request error', msg: e.message });
-            });
-          }
-          break;
-        case 'GET_META':
-          if (!payload.apiKey) {
-            return that.sendSocketNotification('ERR', { type: 'config error', msg: 'missingapiKey' });
-          }
-          else {
-
-            var options = {
-              host: 'airapi.airly.eu',
-              port: 443,
-              path: 'https://airapi.airly.eu/v2/meta/indexes',
-              headers: {
-                apikey: payload.apiKey,
-                'Accept-Language': payload.lang,
-                Accept: 'application/json'
+                item.values.unshift([body[j].children[0].textContent.replace(/(\d+)\.(\d+)\.(\d+), ([\d\:]+)/gi, '$3-$2-$1 $4'), parseFloat(val.replace(',', '.'))])
               }
-            };
+              if (item.values.length > 0) {
+                res.chartElements.push(item)
+              }
+            }
 
-            https.get(options, function (resource) {
-              var meta = '';
-              resource.on('data', function (chunk) {
-                meta += chunk;
-              });
-              resource.on('end', function () {
-                try {
-                  meta = { meta: JSON.parse(meta) };
-                } catch (e) {
-                  return that.sendSocketNotification('ERR', { type: 'json error', msg: e });
+              var pollutions = []
+              for (let item of res.chartElements) {
+                if ('All' == payload.pollutionType || item.key == payload.pollutionType) {
+                  if (payload.nowCast && ('PM10' == item.key || 'PM2.5' == item.key || 'O3' == item.key)) {
+                    pollutions.push({ key: item.key, value: nowcast(item.values, item.key), time: item.values[0][0]});
+                  }
+                  else {
+                    pollutions.push({ key: item.key, value: item.values[0][1], time: item.values[0][0]});
+                  }
                 }
-
-                meta.id = payload.id;
-
-                return that.sendSocketNotification('META', meta)
-
-              });
-            }).on('error', function (e) {
-              return that.sendSocketNotification('ERR', { type: 'request error', msg: e.message });
-            });
+              }
+              self.sendSocketNotification('DATA', pollutions)
           }
-          break;
-      }
+        });
+        break;
+      case 'GET_LOC':
+        const jsdom = require("jsdom");
+        const { JSDOM } = jsdom;
+        JSDOM.fromURL('http://powietrze.gios.gov.pl/pjp/current/station_details/info/' + payload).then(dom => {
+          for (let row of dom.window.document.querySelector('tbody').rows) {
+            if (row.cells[0].textContent == 'Adres') {
+              self.sendSocketNotification('LOC', row.cells[1].textContent);
+            }
+          }
+        });
+        break;
+    }
   }
 });
+
+var nowcast = function(values, pollutionType) {
+  var len = 'O3' == pollutionType ? 8 : 12
+  var pollutions = []
+  for (let pol of values) {
+    if (pol[1]) {
+      pollutions.push(pol[1])
+      if (pollutions.length >= len) {
+        break
+      }
+    }
+  }
+
+  // math from: https://en.wikipedia.org/wiki/NowCast_(air_quality_index)
+  var w = Math.min(...pollutions) / Math.max(...pollutions)
+
+  if (1 == w) {
+    return pollutions[0]
+  }
+
+  if (pollutionType != 'O3') {
+    w = w > .5 ? w : .5
+
+    if (.5 == w) {
+      var ncl = 0
+      for (i = 0; i < pollutions.length; i++) {
+        ncl += Math.pow(.5, i + 1) * pollutions[i];
+      }
+      return (ncl);
+    }
+  }
+  var ncl = 0, ncm = 0
+  for (i = 0; i < pollutions.length; i++) {
+    ncl += Math.pow(w, i) * pollutions[i];
+    ncm += Math.pow(w, i)
+  }
+  return (ncl / ncm);
+}
